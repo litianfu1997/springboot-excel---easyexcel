@@ -2,10 +2,17 @@ package com.sugon.excel.controller;
 
 
 import com.alibaba.excel.EasyExcel;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONValidator;
+import com.sugon.excel.annotation.SaveToCache;
 import com.sugon.excel.datalistener.DataListener;
 import com.sugon.excel.res.ResultEntity;
 import com.sugon.excel.res.ResultEnum;
 import com.sugon.excel.util.ChineseToSpell;
+import com.sugon.excel.util.RedisUtils;
+import jdk.nashorn.internal.ir.IfNode;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.slf4j.Logger;
@@ -41,6 +48,10 @@ public class ExcelServerProviderController {
 
     private static Integer requestCount = 0;
 
+    @Autowired
+    private RedisUtils redisUtils;
+
+
     /**
      * 存放excel表格的路径
      */
@@ -54,22 +65,48 @@ public class ExcelServerProviderController {
 
 
     /**
-     * 服务连通性测试
-     *
+     * 读取excel表格，并存入redis缓存中
      * @return
      */
     @RequestMapping(value = "/test")
-    public  ResultEntity test(@RequestBody Map<String, Object> objectMap) {
+    public ResultEntity selectRowByAnyKey(@RequestBody Map<String, Object> objectMap) {
 
+        String sheet = objectMap.get("sheet").toString();
         //excel路径
-        String fileName = filepath + objectMap.get("sheet").toString();
-        // 这里 只要，然后读取第一个sheet 同步读取会自动finish
-        dataListener = new DataListener();
-        //读取excel
-        EasyExcel.read(fileName, dataListener).sheet().doRead();
+        String fileName = filepath + sheet;
+        //表头数据
+        Map<Integer, String> headMap = new HashMap<>();
+        //表的数据
+        List<Map<Integer, String>> list = null;
 
-        //获取表头数据
-        Map<Integer, String> headMap = dataListener.getHeadMap();
+        //如果redis里面没有这个表格的缓存数据，读表，存redis
+        if (redisUtils.get(sheet) == null && redisUtils.get(sheet + "-head") == null) {
+            // 这里 只要，然后读取第一个sheet 同步读取会自动finish
+            dataListener = new DataListener();
+            //读取excel
+            EasyExcel.read(fileName, dataListener).sheet().doRead();
+            //获取表头数据
+            headMap = dataListener.getHeadMap();
+            //获取表的数据
+            list = dataListener.getList();
+
+            //将表头数据存入redis
+            redisUtils.set(sheet + "-head", JSON.toJSONString(headMap));
+
+            //将表数据存入redis
+            redisUtils.set(sheet, JSON.toJSONString(list));
+
+        } else {
+            //redis缓存有数据
+            //获取表数据
+            String dataJsonString = redisUtils.get(sheet);
+            //获取表头数据
+            String headMapJsonString = redisUtils.get(sheet + "-head");
+            //json字符串转换
+            list = (List<Map<Integer, String>>) JSON.parseArray(dataJsonString,headMap.getClass());
+            headMap = (Map<Integer, String>) JSON.parseObject(headMapJsonString,Map.class);
+        }
+
 
         //用户传过来的map
         Map<String, String> data = (Map<String, String>) objectMap.get("data");
@@ -81,8 +118,6 @@ public class ExcelServerProviderController {
         while (entries.hasNext()) {
 
             Map.Entry<String, String> entry = entries.next();
-
-            //将中文字段转换为拼音
             String key = entry.getKey();
             Object value = entry.getValue();
             //如果传入的key不存在
@@ -97,15 +132,14 @@ public class ExcelServerProviderController {
             notNullCount++;
         }
 
-        //获取表的数据
-        List<Map<Integer, String>> list = dataListener.getList();
 
         //记录不为空的字段
         int finalNotNullCount = notNullCount;
 
+        Map<Integer, String> finalHeadMap = headMap;
         //过滤list
         List<Map<Integer, String>> result = list.stream().filter(e -> {
-            Iterator<Map.Entry<Integer, String>> keyEntries = headMap.entrySet().iterator();
+            Iterator<Map.Entry<Integer, String>> keyEntries = finalHeadMap.entrySet().iterator();
             List<Boolean> booleanList = new ArrayList<>();
             while (keyEntries.hasNext()) {
                 Map.Entry<Integer, String> entry = keyEntries.next();
@@ -132,6 +166,7 @@ public class ExcelServerProviderController {
             System.gc();
             logger.info("System.gc();");
         }
+
 
         return new ResultEntity(ResultEnum.SUCCESS, resultList);
     }
