@@ -1,0 +1,4 @@
+###提供RESTFul风格API，excel读取工具
+application.properties文件中excel.path是excel表格文件的路径
+
+默认会通过读取的excel表格生成ExcelEntity实体类
