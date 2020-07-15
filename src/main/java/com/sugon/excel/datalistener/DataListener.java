@@ -26,7 +26,7 @@ public class DataListener extends AnalysisEventListener<Map<Integer, String>> {
     private static final int BATCH_COUNT = 5;
 
     /**
-     * 存储表格数据
+            * 存储表格数据
      */
     private List<Map<Integer, String>> list = new ArrayList<Map<Integer, String>>();
 
