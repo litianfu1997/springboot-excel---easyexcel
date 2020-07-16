@@ -82,8 +82,8 @@ public class ExcelServerProviderController {
      *          operator：操作符
      *              eq：等于，lt：小于，gt：大于，lte:大于等于，gte：小于等于
      *              lk：模糊查询，任意匹配
-     *              ll:模糊查询，左边模糊，右边匹配，如 %徐坤
-     *              lr：模糊查询，右边模糊，左边匹配，如 蔡徐%
+     *              ll:模糊查询，左边匹配，如 蔡徐%
+     *              lr：模糊查询，右边匹配，如 %徐坤
      *      order：排序
      *          key：排序字段
      *          by：排序类型   asc:升序,desc:降序
@@ -169,16 +169,17 @@ public class ExcelServerProviderController {
                                 atomicBoolean.set(e.get(key).indexOf(value.toString()) == -1 ? false : true);
                                 boolList.add(atomicBoolean);
                                 break;
-                            //左边模糊 %福
+                            //左边匹配 蔡徐%
                             case "ll":
                                 atomicBoolean.set(e.get(key).indexOf(value.toString()) == -1 ? false : true
-                                        && e.get(key).endsWith(value.toString()));
+                                        && e.get(key).startsWith(value.toString(),e.get(key).indexOf(value.toString())));
                                 boolList.add(atomicBoolean);
+
                                 break;
-                            //右边模糊 李%
+                            //右边匹配 %徐坤
                             case "lr":
                                 atomicBoolean.set(e.get(key).indexOf(value.toString()) == -1 ? false : true
-                                        && e.get(key).startsWith(value.toString(),e.get(key).indexOf(value.toString())));
+                                        && e.get(key).endsWith(value.toString()));
                                 boolList.add(atomicBoolean);
                                 break;
 
