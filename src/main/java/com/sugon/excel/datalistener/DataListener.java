@@ -42,9 +42,7 @@ public class DataListener extends AnalysisEventListener<Map<Integer, String>> {
      */
     @Override
     public void invoke(Map<Integer, String> data, AnalysisContext context) {
-//        LOGGER.info("解析到一条数据:{}", JSON.toJSONString(data));
         list.add(data);
-
     }
 
 
@@ -56,13 +54,11 @@ public class DataListener extends AnalysisEventListener<Map<Integer, String>> {
      */
     @Override
     public void invokeHeadMap(Map<Integer, String> headMap, AnalysisContext context) {
-//        LOGGER.info("解析到一条头数据:{}", JSON.toJSONString(headMap));
         this.headMap = headMap;
     }
 
     @Override
     public void doAfterAllAnalysed(AnalysisContext analysisContext) {
-//        LOGGER.info("所有数据解析完成！");
     }
 
 
