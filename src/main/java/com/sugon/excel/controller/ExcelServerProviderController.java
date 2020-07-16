@@ -81,9 +81,9 @@ public class ExcelServerProviderController {
      *          key：条件字段名
      *          operator：操作符
      *              eq：等于，lt：小于，gt：大于，lte:大于等于，gte：小于等于
-     *              lk：模糊查询，任意匹配
-     *              ll:模糊查询，左边匹配，如 蔡徐%
-     *              lr：模糊查询，右边匹配，如 %徐坤
+     *              lk：模糊查询，任意匹配 可以使用
+     *              ll:模糊查询，左边模糊，如 %徐坤 弃用
+     *              lr：模糊查询，右边模糊，如 蔡徐% 建议使用
      *      order：排序
      *          key：排序字段
      *          by：排序类型   asc:升序,desc:降序
@@ -108,7 +108,7 @@ public class ExcelServerProviderController {
         //排序字段
         List<Map<String, Object>> order = (List<Map<String, Object>>) objectMap.get("order");
         if (page == null) {
-            page = 0;
+            page = 1;
         }
 
         if (limit == null) {
@@ -169,17 +169,18 @@ public class ExcelServerProviderController {
                                 atomicBoolean.set(e.get(key).indexOf(value.toString()) == -1 ? false : true);
                                 boolList.add(atomicBoolean);
                                 break;
-                            //左边匹配 蔡徐%
+
+                            //左边模糊 %徐坤
                             case "ll":
                                 atomicBoolean.set(e.get(key).indexOf(value.toString()) == -1 ? false : true
-                                        && e.get(key).startsWith(value.toString(),e.get(key).indexOf(value.toString())));
+                                        && e.get(key).endsWith(value.toString()));
                                 boolList.add(atomicBoolean);
-
                                 break;
-                            //右边匹配 %徐坤
+
+                            //右边模糊 蔡徐%
                             case "lr":
                                 atomicBoolean.set(e.get(key).indexOf(value.toString()) == -1 ? false : true
-                                        && e.get(key).endsWith(value.toString()));
+                                        && e.get(key).startsWith(value.toString(),e.get(key).indexOf(value.toString())));
                                 boolList.add(atomicBoolean);
                                 break;
 
@@ -237,7 +238,7 @@ public class ExcelServerProviderController {
                     return map;
                 })
                 //分页
-                .skip(page * (limit - 1)).limit(limit)
+                .skip((page-1) * (limit - 1)).limit(limit)
                 .collect(Collectors.toList());
         return new ResultEntity(ResultEnum.SUCCESS, result);
     }
