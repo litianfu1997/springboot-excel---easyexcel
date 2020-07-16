@@ -61,33 +61,33 @@ public class ExcelServerProviderController {
      * excel数据源类sql检索
      * json格式：
      * {
-     *     "page":0,
-     *     "limit": 20,
-     *     "select": "*",
-     *     "where":[
-     *         {"key":"姓名","operator":"lk","value":"李"},
-     *         {"key":"日期","operator":"lt","value":"2018年8月1日"}
-     *     ],
-     *     "order":[
-     *         {"key":"日期","by":"desc"}
-     *     ],
-     *     "sheet":"test1.xlsx"
+     * "page":0,
+     * "limit": 20,
+     * "select": "*",
+     * "where":[
+     * {"key":"姓名","operator":"lk","value":"李"},
+     * {"key":"日期","operator":"lt","value":"2018年8月1日"}
+     * ],
+     * "order":[
+     * {"key":"日期","by":"desc"}
+     * ],
+     * "sheet":"test1.xlsx"
      * }
      * json字段描述：
-     *      page：页码
-     *      limit：该页显示数据条数
-     *      select：要映射显示的字段
-     *      where：检索的条件，默认多条件是”与“操作
-     *          key：条件字段名
-     *          operator：操作符
-     *              eq：等于，lt：小于，gt：大于，lte:大于等于，gte：小于等于
-     *              lk：模糊查询，任意匹配 可以使用
-     *              ll:模糊查询，左边模糊，如 %徐坤 弃用
-     *              lr：模糊查询，右边模糊，如 蔡徐% 建议使用
-     *      order：排序
-     *          key：排序字段
-     *          by：排序类型   asc:升序,desc:降序
-     *      sheet：表格名称
+     * page：页码
+     * limit：该页显示数据条数
+     * select：要映射显示的字段
+     * where：检索的条件，默认多条件是”与“操作
+     * key：条件字段名
+     * operator：操作符
+     * eq：等于，lt：小于，gt：大于，lte:大于等于，gte：小于等于
+     * lk：模糊查询，任意匹配 可以使用
+     * ll:模糊查询，左边模糊，如 %徐坤 弃用
+     * lr：模糊查询，右边模糊，如 蔡徐% 建议使用
+     * order：排序
+     * key：排序字段
+     * by：排序类型   asc:升序,desc:降序
+     * sheet：表格名称
      *
      * @param objectMap
      * @return
@@ -107,11 +107,11 @@ public class ExcelServerProviderController {
         List<Map<String, Object>> where = (List<Map<String, Object>>) objectMap.get("where");
         //排序字段
         List<Map<String, Object>> order = (List<Map<String, Object>>) objectMap.get("order");
-        if (page == null) {
+        if (page == null || page == 0) {
             page = 1;
         }
 
-        if (limit == null) {
+        if (limit == null || page == 0) {
             limit = 20;
         }
 
@@ -172,15 +172,17 @@ public class ExcelServerProviderController {
 
                             //左边模糊 %徐坤
                             case "ll":
-                                atomicBoolean.set(e.get(key).indexOf(value.toString()) == -1 ? false : true
-                                        && e.get(key).endsWith(value.toString()));
+                                atomicBoolean.set(e.get(key).lastIndexOf(value.toString()) == -1 ? false : true
+                                        && e.get(key)
+                                        .substring(0,e.get(key).lastIndexOf(value.toString())+value.toString().length())
+                                        .endsWith(value.toString()));
                                 boolList.add(atomicBoolean);
                                 break;
 
                             //右边模糊 蔡徐%
                             case "lr":
                                 atomicBoolean.set(e.get(key).indexOf(value.toString()) == -1 ? false : true
-                                        && e.get(key).startsWith(value.toString(),e.get(key).indexOf(value.toString())));
+                                        && e.get(key).startsWith(value.toString(), e.get(key).indexOf(value.toString())));
                                 boolList.add(atomicBoolean);
                                 break;
 
@@ -220,10 +222,10 @@ public class ExcelServerProviderController {
                 //字段映射
                 .map(e -> {
                     String[] field;
-                    if ("*".equals(select)||select == null){
+                    if ("*".equals(select) || select == null) {
                         Set<String> set = e.keySet();
                         field = set.toArray(new String[set.size()]);
-                    }else {
+                    } else {
                         field = select.split(",");
                     }
                     StringBuffer str = new StringBuffer();
@@ -238,7 +240,7 @@ public class ExcelServerProviderController {
                     return map;
                 })
                 //分页
-                .skip((page-1) * (limit - 1)).limit(limit)
+                .skip((page - 1) * (limit - 1)).limit(limit)
                 .collect(Collectors.toList());
         return new ResultEntity(ResultEnum.SUCCESS, result);
     }
@@ -266,7 +268,7 @@ public class ExcelServerProviderController {
         List<Map<Integer, String>> list = null;
 
         //如果redis里面没有这个表格的缓存数据，读表，存redis
-        if (redisUtils.get("full-"+sheet) == null) {
+        if (redisUtils.get("full-" + sheet) == null) {
             // 这里 只要，然后读取第一个sheet 同步读取会自动finish
             dataListener = new DataListener();
             //读取excel
