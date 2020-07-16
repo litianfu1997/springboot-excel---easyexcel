@@ -57,7 +57,41 @@ public class ExcelServerProviderController {
      */
     private DataListener dataListener;
 
-
+    /**
+     * excel数据源类sql检索
+     * json格式：
+     * {
+     *     "page":0,
+     *     "limit": 20,
+     *     "select": "*",
+     *     "where":[
+     *         {"key":"姓名","operator":"lk","value":"李"},
+     *         {"key":"日期","operator":"lt","value":"2018年8月1日"}
+     *     ],
+     *     "order":[
+     *         {"key":"日期","by":"desc"}
+     *     ],
+     *     "sheet":"test1.xlsx"
+     * }
+     * json字段描述：
+     *      page：页码
+     *      limit：该页显示数据条数
+     *      select：要映射显示的字段
+     *      where：检索的条件，默认多条件是”与“操作
+     *          key：条件字段名
+     *          operator：操作符
+     *              eq：等于，lt：小于，gt：大于，lte:大于等于，gte：小于等于
+     *              lk：模糊查询，任意匹配
+     *              ll:模糊查询，左边模糊，右边匹配，如 %徐坤
+     *              lr：模糊查询，右边模糊，左边匹配，如 蔡徐%
+     *      order：排序
+     *          key：排序字段
+     *          by：排序类型   asc:升序,desc:降序
+     *      sheet：表格名称
+     *
+     * @param objectMap
+     * @return
+     */
     @RequestMapping("/selectExcel")
     public ResultEntity selectExcel(@RequestBody Map<String, Object> objectMap) {
 
