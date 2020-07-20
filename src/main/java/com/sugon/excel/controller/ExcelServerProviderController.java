@@ -128,21 +128,21 @@ public class ExcelServerProviderController {
     /**
      * 删除本地excel文件,与缓存
      *不能删除远程文件
-     * @param excelname excel文件名
+     * @param excelName excel文件名
      * @return
      */
     @RequestMapping("removeExcelFileByName")
-    public ResultEntity removeExcelFileByName(String excelname) {
+    public ResultEntity removeExcelFileByName(String excelName) {
 
         //excel路径
-        String fileName = filepath + excelname;
+        String fileName = filepath + excelName;
 
         File file = new File(fileName);
 
         if (file.exists()) {
             boolean delete = file.delete();
             if (delete == true) {
-                this.removeRedisCacheByName(excelname);
+                this.removeRedisCacheByName(excelName);
                 return new ResultEntity(ResultEnum.SUCCESS);
             } else {
                 throw  new GlobalException("删除失败");
@@ -156,14 +156,14 @@ public class ExcelServerProviderController {
      * 移除redis缓存的数据
      * 请传输完整文件名，例如"test1.xlsx"
      *
-     * @param excelname excel文件名
+     * @param excelName excel文件名
      * @return
      */
     @RequestMapping("removeRedisCacheByName")
-    public ResultEntity removeRedisCacheByName(String excelname) {
+    public ResultEntity removeRedisCacheByName(String excelName) {
 
         //删除redis对应表数据
-        Long del = redisUtils.del("full-" + excelname);
+        Long del = redisUtils.del("full-" + excelName);
         if (del > 0) {
             return new ResultEntity(ResultEnum.SUCCESS);
         }

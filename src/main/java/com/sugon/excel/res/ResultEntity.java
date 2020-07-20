@@ -1,10 +1,15 @@
 package com.sugon.excel.res;
 
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
 /**
  * 统一返回实体
  * @author jgz
  * CreateTime 2020/4/23 11:05
  */
+
 public class ResultEntity<T> {
 
     /**
@@ -24,6 +29,15 @@ public class ResultEntity<T> {
      */
     private T data;
 
+    @Override
+    public String toString() {
+        return "ResultEntity{" +
+                "status=" + status +
+                ", code='" + code + '\'' +
+                ", message='" + message + '\'' +
+                ", data=" + data +
+                '}';
+    }
 
     public ResultEntity(ResultEnum resultEnum){
         this(resultEnum,null);
